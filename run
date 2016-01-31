@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cd /freenet
+if [ -e /freenet/data/update.sh ]
+then
+	# ensure that we have the current build
+	/freenet/data/update.sh
+else
+	# we should install
+	wget -qO - https://api.github.com/repos/freenet/fred/releases/latest | grep browser_download_url | grep new_installer_offline| cut -d\" -f 4|xargs wget -c
+	gpg --import /release-managers.asc
+	gpg --batch --verify new_installer_offline_*sig new_installer_offline*jar || exit 1
+	echo INSTALL_PATH=/freenet/data/ > /tmp/options.properties
+	java -jar /freenet/new_installer_offline*jar -console -options /tmp/options.properties
+	/freenet/data/run.sh stop
+fi
+
+/freenet/data/run.sh console
